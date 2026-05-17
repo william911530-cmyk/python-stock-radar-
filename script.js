@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     scanBtn.addEventListener('click', async () => {
         // 這裡放你原本叫出電子魚動畫的程式碼！
-        exportBtn.style.display = 'none'; 
+        exportBtn.style.display = 'loading-overlay'; 
         fullMarketBody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">資料運算中...</td></tr>';
         
         try {
