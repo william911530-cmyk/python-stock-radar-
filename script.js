@@ -3,44 +3,75 @@ document.addEventListener('DOMContentLoaded', () => {
     const overlay = document.getElementById('loading-overlay');
     const tableBody = document.getElementById('table-body');
     const updateTime = document.getElementById('update-time');
+    const progressSubtext = document.querySelector('.cyber-subtext');
+
+    // 連接你的雲端後端
+    const API_BASE = 'https://python-stock-radar.onrender.com/api';
 
     scanBtn.addEventListener('click', async () => {
-        // 1. 顯示電子魚 Loading 畫面
         overlay.classList.remove('hidden');
+        progressSubtext.textContent = "系統啟動：正在向台灣證交所取得全市場清單...";
         
         try {
-            // 2. 真實向你電腦上的 Python API 發送請求！
-            const response = await fetch('https://python-stock-radar.onrender.com/api/scan');
+            // 階段一：取得 1800 檔清單
+            const listRes = await fetch(`${API_BASE}/get_list`);
+            if (!listRes.ok) throw new Error('無法取得台股清單，請確認 API 是否清醒');
+            const stockDict = await listRes.json();
+            const allTickers = Object.keys(stockDict);
             
-            // 確保伺服器有正常回應
-            if (!response.ok) {
-                throw new Error(`伺服器錯誤: ${response.status}`);
+            if (allTickers.length === 0) throw new Error('證交所回傳空清單，可能遭到暫時阻擋');
+
+            // 階段二：螞蟻搬大象 (Map 派發任務)
+            const chunkSize = 200; // 每批 200 檔，保證不超時不爆 Ram
+            let allRecords = [];
+
+            for (let i = 0; i < allTickers.length; i += chunkSize) {
+                const chunk = allTickers.slice(i, i + chunkSize);
+                const currentEnd = Math.min(i + chunkSize, allTickers.length);
+                
+                // 動態更新網頁畫面上的文字！超帥！
+                progressSubtext.textContent = `[深度掃描中] 正在分析第 ${i + 1} 到 ${currentEnd} 檔... (共 ${allTickers.length} 檔)`;
+
+                const chunkRes = await fetch(`${API_BASE}/scan_chunk`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tickers: chunk, stock_dict: stockDict })
+                });
+                
+                if (!chunkRes.ok) throw new Error(`批次 ${i} 處理失敗，伺服器可能過載`);
+                const chunkData = await chunkRes.json();
+                allRecords = allRecords.concat(chunkData);
             }
 
-            // 將拿到的資料轉成 JSON 格式
-            const realData = await response.json();
+            progressSubtext.textContent = "資料萃取完畢！正在進行大數據 PR 值綜合排名...";
+
+            // 階段三：終極排名 (Reduce)
+            const rankRes = await fetch(`${API_BASE}/calculate_rank`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ records: allRecords })
+            });
             
-            // 3. 把拿到的真實資料放進表格
-            renderTable(realData);
-            
-            // 更新最後檢索時間
-            const now = new Date();
-            updateTime.textContent = now.toLocaleTimeString('zh-TW', { hour12: false });
+            if (!rankRes.ok) throw new Error('AI 排名運算失敗');
+            const finalTop20 = await rankRes.json();
+
+            renderTable(finalTop20);
+            updateTime.textContent = new Date().toLocaleTimeString('zh-TW', { hour12: false });
 
         } catch (error) {
-            console.error('抓取資料失敗:', error);
-            tableBody.innerHTML = `<tr><td colspan="5" class="empty-state" style="color:red;">掃描失敗，請確認 Python API 伺服器是否已啟動！<br>錯誤訊息: ${error.message}</td></tr>`;
+            console.error('執行失敗:', error);
+            tableBody.innerHTML = `<tr><td colspan="5" class="empty-state" style="color:red;">系統異常中止！<br>錯誤訊息: ${error.message}</td></tr>`;
         } finally {
-            // 無論成功或失敗，最後都隱藏 Loading 畫面
             overlay.classList.add('hidden');
+            // 復原預設文字
+            setTimeout(() => { progressSubtext.textContent = "正在抓取並運算全台股特徵資料，請稍候"; }, 1000);
         }
     });
 
     function renderTable(data) {
-        tableBody.innerHTML = ''; // 清空現有表格
-        
+        tableBody.innerHTML = '';
         if (data.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="5" class="empty-state">目前沒有符合條件的標的</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="5" class="empty-state">大盤偏弱，目前沒有符合站上 5MA 條件的標的</td></tr>';
             return;
         }
 
