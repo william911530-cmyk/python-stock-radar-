@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
-import sys, requests, urllib3, io
+import sys, requests, urllib3, io, gc
 import numpy as np
 import pandas as pd
 import yfinance as yf
 import warnings
-import traceback
-import sys, requests, urllib3, io, gc
 
 warnings.filterwarnings('ignore')
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -18,7 +16,7 @@ CORS(app)
 def get_tw_stock_list():
     stock_dict = {}
     try:
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
+        headers = {'User-Agent': 'Mozilla/5.0'}
         for m in [2, 4]:
             url = f"https://isin.twse.com.tw/isin/C_public.jsp?strMode={m}"
             res = requests.get(url, headers=headers, verify=False, timeout=15)
@@ -34,94 +32,77 @@ def get_tw_stock_list():
                                 suffix = ".TW" if m == 2 else ".TWO"
                                 stock_dict[f"{code}{suffix}"] = {"name": name, "ind": cat}
                 except: continue
-    except Exception as e: 
+    except Exception as e:
         print(f"抓取清單失敗: {e}")
     return stock_dict
 
-def run_ai_scanner():
-    print("🔍 [進度 1] 開始向證交所抓取全台股清單...")
-    stock_dict = get_tw_stock_list()
-    
-    if not stock_dict:
-        print("❌ [錯誤] 抓不到台股清單，可能被台灣證交所封鎖了！")
-        return []
-        
-    # 【封印解除】這次我們真的要抓全市場所有的股票了！
-    all_tickers = list(stock_dict.keys()) 
-    print(f"✅ [進度 2] 成功取得 {len(all_tickers)} 檔清單，準備啟動「螞蟻搬大象」分批抓取模式...")
-    
+# 窗口 1：專門提供全市場清單
+@app.route('/api/get_list', methods=['GET'])
+def api_get_list():
+    return jsonify(get_tw_stock_list())
+
+# 窗口 2：專門處理「前端派發過來的批次特徵萃取 (Map)」
+@app.route('/api/scan_chunk', methods=['POST'])
+def api_scan_chunk():
+    req_data = request.json
+    batch = req_data.get('tickers', [])
+    stock_dict = req_data.get('stock_dict', {})
+
+    if not batch: return jsonify([])
+
     records = []
-    batch_size = 300  # 【極速引擎 1】每次處理 300 檔
-    
-    
-    # 迴圈分批處理
-    # 迴圈分批處理
-    for i in range(0, len(all_tickers), batch_size):
-        batch = all_tickers[i:i + batch_size]
-        print(f"⏳ [處理中] 正在下載第 {i+1} 到 {i+len(batch)} 檔資料...")
-        
-        try:
-            # 【瘦身 2】threads=False 關閉多執行緒，讓它排隊乖乖下載，絕對不撐爆記憶體
-            data = yf.download(batch, period="80d", interval="1d", group_by='ticker', auto_adjust=False, progress=False, threads=True)
-            
-            if data.empty:
-                continue
-                
-            for ticker in batch:
-                try:
-                    df = data[ticker] if len(batch) > 1 else data
-                    if df.empty or len(df) < 60: continue
-                    df = df.dropna()
-                    close = df['Close']
-                    if len(close) < 60: continue
+    try:
+        # 開啟多執行緒極速下載，反正一次只有 200 檔絕對撐得住
+        data = yf.download(batch, period="80d", interval="1d", group_by='ticker', auto_adjust=False, progress=False, threads=True)
 
-                    ma5 = close.rolling(5).mean().iloc[-1]
-                    ma20 = close.rolling(20).mean().iloc[-1]
-                    ma60 = close.rolling(60).mean().iloc[-1]
-                    
-                    hist_vol = close.pct_change().rolling(20).std().iloc[-1] * np.sqrt(252) * 100
-                    
-                    std20 = close.rolling(20).std().iloc[-1]
-                    bb_upper = ma20 + 2 * std20
-                    bb_width = ((bb_upper - (ma20 - 2 * std20)) / ma20) * 100
-                    
-                    current_close = close.iloc[-1]
-                    
-                    p_to_ma60 = (current_close / ma60 - 1) * 100
-                    trend_str = (ma5 / ma60 - 1) * 100
-                    p_to_ma20 = (current_close / ma20 - 1) * 100
-                    p_to_bbupper = (current_close / bb_upper - 1) * 100
-                    roc_10 = (current_close - close.iloc[-11]) / close.iloc[-11] * 100
+        for ticker in batch:
+            try:
+                df = data[ticker] if len(batch) > 1 else data
+                if df.empty or len(df) < 60: continue
+                df = df.dropna()
+                close = df['Close']
+                if len(close) < 60: continue
 
-                    if np.isnan(hist_vol) or np.isnan(roc_10): continue
+                ma5 = close.rolling(5).mean().iloc[-1]
+                ma20 = close.rolling(20).mean().iloc[-1]
+                ma60 = close.rolling(60).mean().iloc[-1]
 
-                    records.append({
-                        'id': ticker.replace(".TW", "").replace(".TWO", ""),
-                        'name': stock_dict[ticker]['name'],
-                        'close': round(current_close, 2),
-                        'F_Hist_Vol': hist_vol,
-                        'F_BB_Width': bb_width,
-                        'F_P_to_MA60': p_to_ma60,
-                        'F_Trend_Strength': trend_str,
-                        'F_P_to_MA20': p_to_ma20,
-                        'F_P_to_BBUpper': p_to_bbupper,
-                        'F_ROC_10': roc_10,
-                        'MA5': ma5
-                    })
-                except: continue
-                
-            # 【瘦身 3】這一批 50 檔算完後，立刻把龐大的歷史資料刪除，並呼叫 gc 回收記憶體
-            del data
-            gc.collect()
-            
-        except Exception as e:
-            print(f"⚠️ [警告] 批次抓取發生錯誤，已跳過: {e}")
-            continue
-    if not records:
-        print("❌ [錯誤] 所有批次皆失敗，或全市場沒有符合基礎資料的股票。")
-        return []
+                hist_vol = close.pct_change().rolling(20).std().iloc[-1] * np.sqrt(252) * 100
+                std20 = close.rolling(20).std().iloc[-1]
+                bb_upper = ma20 + 2 * std20
+                bb_width = ((bb_upper - (ma20 - 2 * std20)) / ma20) * 100
+                current_close = close.iloc[-1]
 
-    print(f"✅ [進度 3] 歷史資料下載完畢！共萃取出 {len(records)} 檔有效標的，進入 AI 排名模型...")
+                # 實戰防守濾網：收盤價必須站上 5MA
+                if current_close < ma5: continue
+
+                records.append({
+                    'id': ticker.replace(".TW", "").replace(".TWO", ""),
+                    'name': stock_dict.get(ticker, {}).get('name', '未知'),
+                    'close': round(current_close, 2),
+                    'F_Hist_Vol': hist_vol,
+                    'F_BB_Width': bb_width,
+                    'F_P_to_MA60': (current_close / ma60 - 1) * 100,
+                    'F_Trend_Strength': (ma5 / ma60 - 1) * 100,
+                    'F_P_to_MA20': (current_close / ma20 - 1) * 100,
+                    'F_P_to_BBUpper': (current_close / bb_upper - 1) * 100,
+                    'F_ROC_10': (current_close - close.iloc[-11]) / close.iloc[-11] * 100
+                })
+            except: continue
+
+        del data
+        gc.collect()
+
+    except Exception as e:
+        print(f"Error: {e}")
+
+    return jsonify(records)
+
+# 窗口 3：專門處理「全市場 PR 值排名 (Reduce)」
+@app.route('/api/calculate_rank', methods=['POST'])
+def api_calculate_rank():
+    records = request.json.get('records', [])
+    if not records: return jsonify([])
 
     df_res = pd.DataFrame(records)
     features = ['F_Hist_Vol', 'F_BB_Width', 'F_P_to_MA60', 'F_Trend_Strength', 'F_P_to_MA20', 'F_P_to_BBUpper', 'F_ROC_10']
@@ -137,18 +118,10 @@ def run_ai_scanner():
     max_score = sum(weights)
     df_res['score'] = round((df_res['score'] / max_score) * 100, 2)
 
-    df_filtered = df_res[df_res['close'] >= df_res['MA5']].copy()
-    top20 = df_filtered.sort_values(by='score', ascending=False).head(20)
-    
+    top20 = df_res.sort_values(by='score', ascending=False).head(20)
     top20.insert(0, 'rank', range(1, len(top20) + 1))
-    result = top20[['rank', 'id', 'name', 'close', 'score']].to_dict(orient='records')
-    print(f"🎉 運算大功告成！今日最強 AI 妖股名單已出爐。")
-    return result
 
-@app.route('/api/scan', methods=['GET'])
-def api_scan():
-    data = run_ai_scanner()
-    return jsonify(data)
+    return jsonify(top20[['rank', 'id', 'name', 'close', 'score']].to_dict(orient='records'))
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
