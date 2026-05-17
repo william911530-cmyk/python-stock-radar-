@@ -50,7 +50,7 @@ def api_scan_chunk():
 
     records = []
     try:
-        data = yf.download(batch, period="80d", interval="1d", group_by='ticker', auto_adjust=False, progress=False, threads=True)
+        data = yf.download(batch, period="80d", interval="1d", group_by='ticker', auto_adjust=False, progress=False, threads=False)
 
         for ticker in batch:
             try:
