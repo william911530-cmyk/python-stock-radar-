@@ -40,8 +40,8 @@ def get_tw_stock_list():
 
 def run_ai_scanner():
     stock_dict = get_tw_stock_list()
-    # 為了測試速度，我們這裡先只抓前 100 檔標的示範 (實戰時可以拿掉 [:100])
-    all_tickers = list(stock_dict.keys())[:100] 
+    # 解除封印！抓取 stock_dict 裡面的所有台股標的
+    all_tickers = list(stock_dict.keys())
     records = []
     
     # 下載歷史資料
