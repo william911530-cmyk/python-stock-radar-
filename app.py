@@ -7,6 +7,7 @@ import pandas as pd
 import yfinance as yf
 import warnings
 import traceback
+import sys, requests, urllib3, io, gc
 
 warnings.filterwarnings('ignore')
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -50,16 +51,18 @@ def run_ai_scanner():
     print(f"✅ [進度 2] 成功取得 {len(all_tickers)} 檔清單，準備啟動「螞蟻搬大象」分批抓取模式...")
     
     records = []
-    batch_size = 200  # 【核心秘訣】每次只處理 200 檔，確保 512MB 記憶體絕對不會爆掉
+    batch_size = 50  # 【瘦身 1】每次只處理 50 檔，細嚼慢嚥
     
     
+    # 迴圈分批處理
     # 迴圈分批處理
     for i in range(0, len(all_tickers), batch_size):
         batch = all_tickers[i:i + batch_size]
         print(f"⏳ [處理中] 正在下載第 {i+1} 到 {i+len(batch)} 檔資料...")
         
         try:
-            data = yf.download(batch, period="100d", interval="1d", group_by='ticker', auto_adjust=False, progress=False, threads=True)
+            # 【瘦身 2】threads=False 關閉多執行緒，讓它排隊乖乖下載，絕對不撐爆記憶體
+            data = yf.download(batch, period="100d", interval="1d", group_by='ticker', auto_adjust=False, progress=False, threads=False)
             
             if data.empty:
                 continue
@@ -106,10 +109,14 @@ def run_ai_scanner():
                         'MA5': ma5
                     })
                 except: continue
+                
+            # 【瘦身 3】這一批 50 檔算完後，立刻把龐大的歷史資料刪除，並呼叫 gc 回收記憶體
+            del data
+            gc.collect()
+            
         except Exception as e:
             print(f"⚠️ [警告] 批次抓取發生錯誤，已跳過: {e}")
             continue
-
     if not records:
         print("❌ [錯誤] 所有批次皆失敗，或全市場沒有符合基礎資料的股票。")
         return []
