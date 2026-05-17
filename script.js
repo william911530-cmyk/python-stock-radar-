@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         try {
             // 2. 真實向你電腦上的 Python API 發送請求！
-            const response = await fetch('http://127.0.0.1:5000/api/scan');
+            const response = await fetch('https://python-stock-radar.onrender.com/api/scan');
             
             // 確保伺服器有正常回應
             if (!response.ok) {
