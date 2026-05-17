@@ -6,19 +6,19 @@ import numpy as np
 import pandas as pd
 import yfinance as yf
 import warnings
+import traceback
 
 warnings.filterwarnings('ignore')
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 app = Flask(__name__)
-# 允許所有來源發送請求 (開發測試用)
 CORS(app)
 
-# --- 這裡保留你原本強大的爬蟲邏輯 ---
 def get_tw_stock_list():
     stock_dict = {}
     try:
-        headers = {'User-Agent': 'Mozilla/5.0'}
+        # 【偽裝術 1】偽裝成一般 Windows 電腦的瀏覽器，欺騙台灣證交所
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
         for m in [2, 4]:
             url = f"https://isin.twse.com.tw/isin/C_public.jsp?strMode={m}"
             res = requests.get(url, headers=headers, verify=False, timeout=15)
@@ -39,13 +39,35 @@ def get_tw_stock_list():
     return stock_dict
 
 def run_ai_scanner():
+    print("🔍 [進度 1] 開始向證交所抓取股票清單...")
     stock_dict = get_tw_stock_list()
-    # 解除封印！抓取 stock_dict 裡面的所有台股標的
-    all_tickers = list(stock_dict.keys())[:50]
-    records = []
     
-    # 下載歷史資料
-    data = yf.download(all_tickers, period="100d", interval="1d", group_by='ticker', auto_adjust=False, progress=False, threads=True)
+    # 【防呆機制 1】如果證交所阻擋，直接提早結束，避免後續當機
+    if not stock_dict:
+        print("❌ [錯誤] 抓不到台股清單，Render 伺服器 IP 被台灣證交所封鎖了！")
+        return []
+        
+    all_tickers = list(stock_dict.keys())[:50] # 為了測試，我們先保持 50 檔
+    print(f"✅ [進度 2] 成功取得 {len(all_tickers)} 檔清單，準備向 Yahoo 抓取歷史股價...")
+    
+    records = []
+    try:
+        # 【偽裝術 2】建立專屬對話通道，偽裝成人類瀏覽器欺騙 Yahoo Finance
+        session = requests.Session()
+        session.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'})
+        
+        data = yf.download(all_tickers, period="100d", interval="1d", group_by='ticker', auto_adjust=False, progress=False, threads=True, session=session)
+        
+        # 【防呆機制 2】如果 Yahoo 把門關上回傳空資料，提早結束避免 pd.concat 崩潰
+        if data.empty:
+            print("❌ [錯誤] Yahoo Finance 回傳了空資料，Render 伺服器 IP 被 Yahoo 封鎖了！")
+            return []
+            
+    except Exception as e:
+        print(f"❌ [錯誤] Yahoo 抓取過程中發生異常: {e}")
+        return []
+
+    print("✅ [進度 3] 成功取得股價，開始進行 AI 動能運算...")
     
     for ticker in all_tickers:
         try:
@@ -91,6 +113,7 @@ def run_ai_scanner():
         except: continue
 
     if not records:
+        print("❌ [錯誤] 股票計算失敗，沒有符合條件的特徵資料。")
         return []
 
     df_res = pd.DataFrame(records)
@@ -110,21 +133,15 @@ def run_ai_scanner():
     df_filtered = df_res[df_res['close'] >= df_res['MA5']].copy()
     top20 = df_filtered.sort_values(by='score', ascending=False).head(20)
     
-    # 加上排名，並轉換成可以回傳給網頁的字典格式 (List of Dicts)
     top20.insert(0, 'rank', range(1, len(top20) + 1))
-    
-    # 只回傳前端需要的欄位
     result = top20[['rank', 'id', 'name', 'close', 'score']].to_dict(orient='records')
+    print(f"🎉 運算大功告成！回傳 {len(result)} 筆妖股名單給網頁。")
     return result
 
-# --- 這裡就是你的 API 窗口 ---
 @app.route('/api/scan', methods=['GET'])
 def api_scan():
-    print("收到前端請求，開始啟動 AI 動能雷達掃描...")
     data = run_ai_scanner()
-    print(f"掃描完成，回傳 {len(data)} 筆資料給前端！")
     return jsonify(data)
 
 if __name__ == '__main__':
-    # 啟動伺服器，預設會跑在 http://127.0.0.1:5000
-    app.run(debug=True, host='127.0.0.1', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000)
