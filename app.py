@@ -41,7 +41,7 @@ def get_tw_stock_list():
 def run_ai_scanner():
     stock_dict = get_tw_stock_list()
     # 解除封印！抓取 stock_dict 裡面的所有台股標的
-    all_tickers = list(stock_dict.keys())
+    all_tickers = list(stock_dict.keys())[:50]
     records = []
     
     # 下載歷史資料
