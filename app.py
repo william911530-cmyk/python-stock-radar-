@@ -52,8 +52,6 @@ def run_ai_scanner():
     records = []
     batch_size = 200  # 【核心秘訣】每次只處理 200 檔，確保 512MB 記憶體絕對不會爆掉
     
-    session = requests.Session()
-    session.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'})
     
     # 迴圈分批處理
     for i in range(0, len(all_tickers), batch_size):
@@ -61,7 +59,7 @@ def run_ai_scanner():
         print(f"⏳ [處理中] 正在下載第 {i+1} 到 {i+len(batch)} 檔資料...")
         
         try:
-            data = yf.download(batch, period="100d", interval="1d", group_by='ticker', auto_adjust=False, progress=False, threads=True, session=session)
+            data = yf.download(batch, period="100d", interval="1d", group_by='ticker', auto_adjust=False, progress=False, threads=True)
             
             if data.empty:
                 continue
