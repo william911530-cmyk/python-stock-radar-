@@ -74,7 +74,7 @@ def api_scan_chunk():
                 if current_close < ma5: continue
 
                 records.append({
-                    'id': ticker.replace(".TW", "").replace(".TWO", ""),
+                    'id': ticker.split('.')[0],
                     'name': stock_dict.get(ticker, {}).get('name', '未知'),
                     'close': round(current_close, 2),
                     'F_Hist_Vol': hist_vol,
