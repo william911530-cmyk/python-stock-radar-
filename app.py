@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from flask import Flask, jsonify
 from flask_cors import CORS
-import sys, requests, urllib3
+import sys, requests, urllib3, io
 import numpy as np
 import pandas as pd
 import yfinance as yf
@@ -21,7 +21,7 @@ def get_tw_stock_list():
         for m in [2, 4]:
             url = f"https://isin.twse.com.tw/isin/C_public.jsp?strMode={m}"
             res = requests.get(url, headers=headers, verify=False, timeout=15)
-            df = pd.read_html(res.text)[0].iloc[1:]
+            df = pd.read_html(io.StringIO(res.text))[0].iloc[1:]
             for _, row in df.iterrows():
                 try:
                     code_name = str(row[0]).split()
