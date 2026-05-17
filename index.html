@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MANUS AI 動能妖股雷達 | 全市場實戰掃描</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- 頂部導覽與資訊 -->
+        <header class="header">
+            <div class="branding">
+                <h1>MANUS AI <span>動能妖股雷達</span></h1>
+                <p>全市場實戰掃描版 | 捨棄傳統指標，專注價格破壞力與波動率</p>
+            </div>
+            <div class="actions">
+                <button id="scan-btn" class="btn-primary">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                    一鍵重新檢索
+                </button>
+            </div>
+        </header>
+
+        <!-- 數據表格區 -->
+        <main class="content">
+            <div class="table-card">
+                <div class="table-header">
+                    <h2>🎯 本日 AI 動能極限妖股 TOP 20</h2>
+                    <span class="status-badge">資料狀態：<span id="update-time">等待檢索...</span></span>
+                </div>
+                <div class="table-responsive">
+                    <table id="stock-table">
+                        <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th>代號</th>
+                                <th>股名</th>
+                                <th>收盤價</th>
+                                <th>AI 分數</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            <!-- 預設空狀態 -->
+                            <tr>
+                                <td colspan="5" class="empty-state">請點擊右上角「一鍵重新檢索」開始掃描全市場</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="disclaimer">
+                    💡 實戰提醒：名單前 7 檔優先分配資金，跌破 MA5 第二天未站回無條件停損！
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 載入中動畫遮罩 (電子風可愛魚) -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="loader-content">
+            <!-- 簡單的 SVG 電子魚 -->
+            <svg class="cyber-fish" viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg">
+                <g stroke="#00f3ff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M80 30 Q 50 10, 20 30 Q 50 50, 80 30 Z" fill="rgba(0, 243, 255, 0.1)"/>
+                    <path d="M20 30 L 5 15 L 5 45 Z" fill="rgba(0, 243, 255, 0.2)"/>
+                    <circle cx="65" cy="25" r="3" fill="#00f3ff"/>
+                    <path d="M50 30 L 60 30" stroke="#ff00ff" stroke-width="2"/>
+                </g>
+            </svg>
+            <h3 class="cyber-text">AI 深度掃描中...</h3>
+            <p class="cyber-subtext">正在抓取並運算全台股特徵資料，請稍候</p>
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
