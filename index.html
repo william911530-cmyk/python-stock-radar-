@@ -1,355 +1,157 @@
+@@ -1,157 +1,157 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>electronicfish AI 動能妖股雷達</title>
+    <title>electronicfish AI 動能妖股雷達 | 全市場實戰掃描</title>
+    <meta charset="UTF-8">
+    <title>MANUS AI 動能妖股雷達</title>
     <style>
-        /* ====== 1. 基礎與版面設定 ====== */
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8fafc; /* 科技感淺灰藍底色 */
-            color: #334155;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .container {
-            width: 100%;
-            max-width: 1100px; /* 加寬一點容納大數據 */
-        }
-        
-        /* ====== 2. 頂部標題與按鈕 ====== */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 15px;
-            margin-bottom: 20px;
-        }
-        .header h1 {
-            margin: 0;
-            color: #0f172a;
-            font-size: 28px;
-        }
-        .header p {
-            margin: 5px 0 0 0;
-            color: #64748b;
-            font-size: 14px;
-        }
-        .btn-primary {
-            background-color: #3b82f6;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .btn-primary:hover { background-color: #2563eb; }
+        /* ... 這裡是你原本寫的一大堆樣式 ...
+           body { ... }
+           .container { ... }
+           table { ... }
+        */
 
-        /* ====== 3. 卡片與表格共用設定 ====== */
-        .card {
-            background: white;
+
+        /* 👇 請把游標點在這裡，也就是原本樣式的最下方 👇 */
+
+        /* 全市場獨立滾動面板樣式 */
+        .market-explorer-panel {
+            background: #ffffff;
             border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             padding: 24px;
-            margin-bottom: 24px;
+            margin-top: 24px;
         }
-        .card-title {
-            font-size: 18px;
-            font-weight: bold;
-            margin-top: 0;
-            margin-bottom: 15px;
+        .panel-header-box {
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 2px solid #e2e8f0;
             padding-bottom: 12px;
+            margin-bottom: 16px;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
+        .panel-title-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 0;
         }
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        th { color: #64748b; font-weight: 600; font-size: 14px; }
-        
-        /* ====== 4. 狀態與文字提示 ====== */
-        .cyber-subtext { color: #64748b; font-size: 14px; background: #f1f5f9; padding: 4px 10px; border-radius: 4px; }
-        .empty-state { text-align: center; color: #94a3b8; padding: 30px; }
-        .score-high { color: #ef4444; font-weight: bold; }
-        .warning-box {
-            background-color: #fffbeb;
-            border-left: 4px solid #f59e0b;
-            padding: 12px;
-            border-radius: 4px;
-            margin-top: 20px;
-            font-size: 13px;
-            color: #92400e;
-        }
-
-        /* ====== 5. 全市場獨立觀測窗專用 ====== */
         .scroll-container {
             height: 450px; 
             overflow-y: auto; 
             border: 1px solid #e2e8f0;
             border-radius: 8px;
-            margin-top: 10px;
         }
+        /* 自訂高質感滾動條 */
         .scroll-container::-webkit-scrollbar { width: 6px; }
         .scroll-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-        
-        /* ====== 6. 遮罩與載入動畫 ====== */
-        #loading-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255,255,255,0.8);
-            display: flex; justify-content: center; align-items: center;
-            z-index: 1000; font-size: 20px; font-weight: bold; color: #3b82f6;
-        }
-        .hidden { display: none !important; }
-    </style>
-</head>
+
+        /* 👆 新樣式貼到這邊結束 👆 */
+
+    </style> </head>
+    
+    </style> 
+</head>   
 <body>
-
-    <div id="loading-overlay" class="hidden">
-        雷達掃描運算中，請稍候... 🚀
-    </div>
-
-    <div class="container">
-        <div class="header">
-            <div>
-                <h1>electronicfish AI 動能妖股雷達</h1>
+    <div class="dashboard-container">
+        <!-- 頂部導覽與資訊 -->
+        <header class="header">
+            <div class="branding">
+                <h1>electronicfish AI <span>動能妖股雷達</span></h1>
                 <p>全市場實戰掃描版 | 捨棄傳統指標，專注價格破壞力與波動率</p>
             </div>
-            <button id="scan-btn" class="btn-primary">
-                🔄 一鍵重新檢索
-            </button>
-        </div>
+            <div class="actions">
+                <button id="scan-btn" class="btn-primary">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                    一鍵重新檢索
+                </button>
+            </div>
+        </header>
 
-        <div class="card">
-            <h3 class="card-title">
-                <span>🎯 本日 AI 動能極限妖股 TOP 20</span>
-                <span class="cyber-subtext" id="update-time">等待檢索...</span>
-            </h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>排名</th>
-                        <th>代號</th>
-                        <th>股名</th>
-                        <th>收盤價</th>
-                        <th>AI 分數</th>
-                    </tr>
-                </thead>
-                <tbody id="table-body">
-                    <tr>
-                        <td colspan="5" class="empty-state">請點擊右上角「一鍵重新檢索」開始掃描全市場</td>
-                    </tr>
-                </tbody>
-            </table>
-            
-            <div style="margin-top: 30px; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-                    <h3 style="margin: 0; color: #1e293b;">📊 全市場量化評分總觀測窗</h3>
-                    <button id="export-btn" style="background-color: #22c55e; color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; display: none;">📥 匯出全市場 CSV</button>
+        <!-- 數據表格區 -->
+        <main class="content">
+            <div class="table-card">
+                <div class="table-header">
+                    <h2>🎯 本日 AI 動能極限妖股 TOP 20</h2>
+                    <span class="status-badge">資料狀態：<span id="update-time">等待檢索...</span></span>
                 </div>
-                <div style="height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 5px;">
-                    <table style="width: 100%; border-collapse: collapse;">
+                <div class="table-responsive">
+                    <table id="stock-table">
                         <thead>
-                            <tr style="background: #f8fafc;">
-                                <th style="padding: 10px; border-bottom: 1px solid #e2e8f0;">排名</th>
-                                <th style="padding: 10px; border-bottom: 1px solid #e2e8f0;">代號</th>
-                                <th style="padding: 10px; border-bottom: 1px solid #e2e8f0;">股名</th>
-                                <th style="padding: 10px; border-bottom: 1px solid #e2e8f0;">收盤價</th>
-                                <th style="padding: 10px; border-bottom: 1px solid #e2e8f0;">AI 分數</th>
-                                <th style="padding: 10px; border-bottom: 1px solid #e2e8f0;">PR 值</th>
+                            <tr>
+                                <th>排名</th>
+                                <th>代號</th>
+                                <th>股名</th>
+                                <th>收盤價</th>
+                                <th>AI 分數</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body">
+                            <!-- 預設空狀態 -->
+                            <tr>
+                                <td colspan="5" class="empty-state">請點擊右上角「一鍵重新檢索」開始掃描全市場</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="disclaimer">
+                  💡 實戰提醒：名單前 7 檔優先分配資金，跌破 MA5 第二天未站回無條件停損！<br>
+                  📅 系統提示：若逢假日或盤中，報價一律以「系統最近一次抓取到之收盤價」為準。
+                </div>
+            </div>
+
+            <div class="market-explorer-panel">
+                <div class="panel-header-box">
+                    <h3 class="panel-title-text">📊 全市場量化評分總觀測窗 (站上5MA標的)</h3>
+                    <button id="export-btn" style="background-color: #22c55e; color: white; border: none; padding: 8px 16px; font-weight: bold; border-radius: 6px; cursor: pointer; display: none;">📥 匯出全市場 PR 總表 (.csv)</button>
+                </div>
+
+                <div class="scroll-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>總排名</th>
+                                <th>代號</th>
+                                <th>股名</th>
+                                <th>收盤價</th>
+                                <th>AI 分數</th>
+                                <th>全市場 PR 位階</th>
                             </tr>
                         </thead>
                         <tbody id="full-market-body">
-                            <tr><td colspan="6" style="text-align: center; padding: 20px; color: #94a3b8;">等待檢索...</td></tr>
+                            <tr>
+                                <td colspan="6" style="text-align: center; color: #64748b; padding: 40px;">等待啟動雷達檢索... ⏳</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
-            
-            <div class="warning-box">
-                💡 實戰提醒：名單前 7 檔優先分配資金，跌破 MA5 第二天未站回無條件停損！<br>
-                📅 系統提示：若逢假日或盤中，報價一律以「系統最近一次抓取到之收盤價」為準。
-            </div>
-        </div>
+        </main>
+    </div>
 
-        <div class="card">
-            <div class="card-title">
-                <span>📊 全市場量化評分總觀測窗 (站上5MA標的)</span>
-                <button id="export-btn" style="background-color: #22c55e; color: white; border: none; padding: 8px 16px; font-weight: bold; border-radius: 6px; cursor: pointer; display: none;">
-                    📥 匯出全市場 PR 總表 (.csv)
-                </button>
-            </div>
-            
-            <div class="scroll-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>總排名</th>
-                            <th>代號</th>
-                            <th>股名</th>
-                            <th>收盤價</th>
-                            <th>AI 分數</th>
-                            <th>全市場 PR 位階</th>
-                        </tr>
-                    </thead>
-                    <tbody id="full-market-body">
-                        <tr>
-                            <td colspan="6" class="empty-state">等待啟動雷達檢索... ⏳</td>
-                        </tr>
-                    </tbody>
-                </table>
+    <!-- 載入中動畫遮罩 (電子風可愛魚) -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="loader-content">
+            <!-- 簡單的 SVG 電子魚 -->
+            <svg class="cyber-fish" viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg">
+                <g stroke="#00f3ff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M80 30 Q 50 10, 20 30 Q 50 50, 80 30 Z" fill="rgba(0, 243, 255, 0.1)"/>
+                    <path d="M20 30 L 5 15 L 5 45 Z" fill="rgba(0, 243, 255, 0.2)"/>
+                    <circle cx="65" cy="25" r="3" fill="#00f3ff"/>
+                    <path d="M50 30 L 60 30" stroke="#ff00ff" stroke-width="2"/>
+                </g>
+            </svg>
+            <h3 class="cyber-text">AI 深度掃描中...</h3>
+            <p class="cyber-subtext">正在抓取並運算全台股特徵資料，請稍候</p>
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
             </div>
         </div>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const scanBtn = document.getElementById('scan-btn');
-            const overlay = document.getElementById('loading-overlay');
-            const tableBody = document.getElementById('table-body');
-            const fullMarketBody = document.getElementById('full-market-body');
-            const updateTime = document.getElementById('update-time');
-            const progressSubtext = document.querySelector('.cyber-subtext');
-            const exportBtn = document.getElementById('export-btn');
-
-            // 連接你的雲端 Python 伺服器
-            const API_BASE = 'https://python-stock-radar.onrender.com/api';
-            let fullMarketData = []; 
-
-            scanBtn.addEventListener('click', async () => {
-                overlay.classList.remove('hidden');
-                progressSubtext.textContent = "系統啟動：正在向台灣證交所取得全市場清單...";
-                exportBtn.style.display = 'none'; 
-                
-                try {
-                    const listRes = await fetch(`${API_BASE}/get_list`);
-                    if (!listRes.ok) throw new Error('無法取得台股清單');
-                    const stockDict = await listRes.json();
-                    const allTickers = Object.keys(stockDict);
-                    
-                    if (allTickers.length === 0) throw new Error('回傳空清單');
-
-                    const chunkSize = 200; 
-                    let allRecords = [];
-
-                    for (let i = 0; i < allTickers.length; i += chunkSize) {
-                        const chunk = allTickers.slice(i, i + chunkSize);
-                        const currentEnd = Math.min(i + chunkSize, allTickers.length);
-                        
-                        overlay.textContent = `[即時運算中] 正在下載並萃取第 ${i + 1} 到 ${currentEnd} 檔... (共 ${allTickers.length} 檔)`;
-
-                        const chunkRes = await fetch(`${API_BASE}/scan_chunk`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ tickers: chunk, stock_dict: stockDict })
-                        });
-                        
-                        if (!chunkRes.ok) throw new Error(`批次 ${i} 處理失敗`);
-                        const chunkData = await chunkRes.json();
-                        allRecords = allRecords.concat(chunkData);
-                    }
-
-                    overlay.textContent = "資料萃取完畢！正在進行大數據 PR 值綜合排名...";
-
-                    const rankRes = await fetch(`${API_BASE}/calculate_rank`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ records: allRecords })
-                    });
-                    
-                    if (!rankRes.ok) throw new Error('AI 排名運算失敗');
-                    fullMarketData = await rankRes.json();
-
-                    // 分流渲染
-                    renderTop20Table(fullMarketData.slice(0, 20));  
-                    renderFullMarketTable(fullMarketData);         
-                    
-                    exportBtn.style.display = 'inline-block';
-                    updateTime.textContent = new Date().toLocaleTimeString('zh-TW', { hour12: false });
-
-                } catch (error) {
-                    console.error('執行失敗:', error);
-                    tableBody.innerHTML = `<tr><td colspan="5" class="empty-state" style="color:red;">系統異常中止！<br>${error.message}</td></tr>`;
-                    fullMarketBody.innerHTML = `<tr><td colspan="6" class="empty-state" style="color:red;">無法載入數據</td></tr>`;
-                } finally {
-                    overlay.classList.add('hidden');
-                    overlay.textContent = "雷達掃描運算中，請稍候... 🚀";
-                }
-            });
-
-            function renderTop20Table(data) {
-                tableBody.innerHTML = '';
-                if (data.length === 0) {
-                    tableBody.innerHTML = '<tr><td colspan="5" class="empty-state">大盤偏弱，無符合條件標的</td></tr>';
-                    return;
-                }
-                data.forEach(stock => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td><strong>${stock.rank}</strong></td>
-                        <td style="color:#3b82f6; font-weight:bold;">${stock.id}</td>
-                        <td>${stock.name}</td>
-                        <td>$${stock.close}</td>
-                        <td class="score-high">${stock.score}</td>
-                    `;
-                    tableBody.appendChild(tr);
-                });
-            }
-
-            function renderFullMarketTable(data) {
-                fullMarketBody.innerHTML = '';
-                if (data.length === 0) {
-                    fullMarketBody.innerHTML = '<tr><td colspan="6" class="empty-state">無數據</td></tr>';
-                    return;
-                }
-                data.forEach(stock => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td style="text-align:center; color:#64748b;">${stock.rank}</td>
-                        <td style="color:#3b82f6; font-weight:bold;">${stock.id}</td>
-                        <td>${stock.name}</td>
-                        <td>$${stock.close}</td>
-                        <td>${stock.score}</td>
-                        <td style="color:#059669; font-weight:bold;">PR ${stock.pr_value}</td>
-                    `;
-                    fullMarketBody.appendChild(tr);
-                });
-            }
-
-            exportBtn.addEventListener('click', () => {
-                if (fullMarketData.length === 0) return alert("無資料可匯出！");
-
-                let csvContent = "\uFEFF總排名,股票代號,股票名稱,收盤價,綜合特徵分數,全市場PR值\n";
-                fullMarketData.forEach(row => {
-                    csvContent += `${row.rank},${row.id},${row.name},${row.close},${row.score},${row.pr_value}\n`;
-                });
-
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                const link = document.createElement("a");
-                link.href = URL.createObjectURL(blob);
-                link.download = `electronicfish_全市場AI動能雷達_${new Date().toISOString().slice(0, 10)}.csv`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            });
-        });
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
