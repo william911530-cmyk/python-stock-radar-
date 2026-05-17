@@ -51,7 +51,7 @@ def run_ai_scanner():
     print(f"✅ [進度 2] 成功取得 {len(all_tickers)} 檔清單，準備啟動「螞蟻搬大象」分批抓取模式...")
     
     records = []
-    batch_size = 50  # 【瘦身 1】每次只處理 50 檔，細嚼慢嚥
+    batch_size = 100  # 【黃金比例 1】每次處理 100 檔
     
     
     # 迴圈分批處理
@@ -62,7 +62,7 @@ def run_ai_scanner():
         
         try:
             # 【瘦身 2】threads=False 關閉多執行緒，讓它排隊乖乖下載，絕對不撐爆記憶體
-            data = yf.download(batch, period="100d", interval="1d", group_by='ticker', auto_adjust=False, progress=False, threads=False)
+            data = yf.download(batch, period="100d", interval="1d", group_by='ticker', auto_adjust=False, progress=False, threads=True)
             
             if data.empty:
                 continue
