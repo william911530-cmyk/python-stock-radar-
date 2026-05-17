@@ -36,12 +36,10 @@ def get_tw_stock_list():
         print(f"抓取清單失敗: {e}")
     return stock_dict
 
-# 窗口 1：專門提供全市場清單
 @app.route('/api/get_list', methods=['GET'])
 def api_get_list():
     return jsonify(get_tw_stock_list())
 
-# 窗口 2：專門處理「前端派發過來的批次特徵萃取 (Map)」
 @app.route('/api/scan_chunk', methods=['POST'])
 def api_scan_chunk():
     req_data = request.json
@@ -52,7 +50,6 @@ def api_scan_chunk():
 
     records = []
     try:
-        # 開啟多執行緒極速下載，反正一次只有 200 檔絕對撐得住
         data = yf.download(batch, period="80d", interval="1d", group_by='ticker', auto_adjust=False, progress=False, threads=True)
 
         for ticker in batch:
@@ -73,7 +70,7 @@ def api_scan_chunk():
                 bb_width = ((bb_upper - (ma20 - 2 * std20)) / ma20) * 100
                 current_close = close.iloc[-1]
 
-                # 實戰防守濾網：收盤價必須站上 5MA
+                # 🛑 核心精華指標過濾：收盤價必須站上 5MA
                 if current_close < ma5: continue
 
                 records.append({
@@ -94,11 +91,10 @@ def api_scan_chunk():
         gc.collect()
 
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Chunk Error: {e}")
 
     return jsonify(records)
 
-# 窗口 3：專門處理「全市場 PR 值排名 (Reduce)」
 @app.route('/api/calculate_rank', methods=['POST'])
 def api_calculate_rank():
     records = request.json.get('records', [])
@@ -118,10 +114,12 @@ def api_calculate_rank():
     max_score = sum(weights)
     df_res['score'] = round((df_res['score'] / max_score) * 100, 2)
 
-    top20 = df_res.sort_values(by='score', ascending=False).head(20)
-    top20.insert(0, 'rank', range(1, len(top20) + 1))
+    # 排序並計算全市場 PR 值
+    all_ranked = df_res.sort_values(by='score', ascending=False)
+    all_ranked['pr_value'] = round(all_ranked['score'].rank(pct=True) * 100, 2)
+    all_ranked.insert(0, 'rank', range(1, len(all_ranked) + 1))
 
-    return jsonify(top20[['rank', 'id', 'name', 'close', 'score']].to_dict(orient='records'))
+    return jsonify(all_ranked[['rank', 'id', 'name', 'close', 'score', 'pr_value']].to_dict(orient='records'))
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
